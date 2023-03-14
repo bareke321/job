@@ -1,4 +1,4 @@
-from fuzzywuzzy import fuzz
+from fuzzywuzzy import fuzz, process
 import pandas as pd
 
 # read in the datasets
@@ -7,15 +7,10 @@ df2 = pd.read_csv('companies2.csv') # second dataset with similar company names
 
 # create a function to find the best match for a company name in df2
 def find_best_match(name, df):
-    best_score = 0
-    best_index = None
-    for i, row in df.iterrows():
-        score = fuzz.token_sort_ratio(name, row['name'])
-        if score > best_score:
-            best_score = score
-            best_index = i
-    if best_index is not None:
-        return df.loc[best_index]
+    matches = process.extract(name, df['name'], limit=1)
+    if len(matches) > 0:
+        match_name, score, match_index = matches[0][0], matches[0][1], df.index[df['name'] == match_name][0]
+        return df.loc[match_index]
     else:
         return None
 
