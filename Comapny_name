@@ -7,12 +7,11 @@ df2 = pd.read_csv('companies2.csv') # second dataset with similar company names
 
 # create a function to find the best match for a company name in df2
 def find_best_match(name, df):
-    matches = process.extract(name, df['name'], limit=1)
+    matches = process.extract(name, df['name'], limit=1, scorer=fuzz.token_sort_ratio)
     if len(matches) > 0:
         match_name = matches[0][0]
-        score = matches[0][1]
-        match_index = df.index[df['name'] == match_name][0]
-        return df.loc[match_index]
+        match_score = matches[0][1]
+        return df[df['name'] == match_name].iloc[0]
     else:
         return None
 
