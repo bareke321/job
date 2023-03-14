@@ -1,59 +1,27 @@
+from fuzzywuzzy import fuzz
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import LabelEncoder
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 
-# Download stopwords and wordnet from NLTK
-nltk.download('stopwords')
-nltk.download('wordnet')
+# read in the datasets
+df1 = pd.read_csv('companies1.csv') # first dataset with company names and IDs
+df2 = pd.read_csv('companies2.csv') # second dataset with similar company names
 
-# Load the company names dataset
-df = pd.read_csv('company_names.csv')
+# create a function to find the best match for a company name in df2
+def find_best_match(name, df):
+    best_score = 0
+    best_index = None
+    for i, row in df.iterrows():
+        score = fuzz.token_sort_ratio(name, row['name'])
+        if score > best_score:
+            best_score = score
+            best_index = i
+    if best_index is not None:
+        return df.loc[best_index]
+    else:
+        return None
 
-# Convert the parent company column to numerical values using LabelEncoder
-le = LabelEncoder()
-y = le.fit_transform(df['parent_company'])
+# match the companies from df1 to the closest company in df2
+df1['matched_company'] = df1['name'].apply(lambda x: find_best_match(x, df2))
 
-# Preprocess the company names using NLTK
-stop_words = set(stopwords.words('english'))
-lemmatizer = WordNetLemmatizer()
-X = []
-for name in df['company_name']:
-    # Tokenize the name into words
-    words = word_tokenize(name.lower())
-    # Remove stop words and non-alphabetic characters
-    words = [w for w in words if w.isalpha() and w not in stop_words]
-    # Lemmatize each word to its base form
-    words = [lemmatizer.lemmatize(w) for w in words]
-    # Join the words back into a single string
-    X.append(' '.join(words))
-
-# Create a pipeline with a TfidfVectorizer and a random forest classifier
-pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer()),
-    ('rf', RandomForestClassifier())
-])
-
-# Define a grid of hyperparameters to search over using grid search
-param_grid = {
-    'tfidf__use_idf': [True, False],
-    'rf__n_estimators': [10, 50, 100],
-    'rf__max_depth': [None, 5, 10]
-}
-
-# Perform grid search to find the best hyperparameters for the model
-grid_search = GridSearchCV(pipeline, param_grid, cv=5)
-grid_search.fit(X, y)
-
-# Evaluate the model's accuracy on the training set
-y_pred = grid_search.predict(X)
-accuracy = accuracy_score(y, y_pred)
-print("Training accuracy: {:.2f}".format(accuracy
+# output the results
+for i, row in df1.iterrows():
+    print(f"{row['name']} ({row['id']}) matched with {row['matched_company']['name']} ({row['matched_company']['id']})")
