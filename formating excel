@@ -1,0 +1,20 @@
+import pandas as pd
+import xlsxwriter
+
+# create a sample dataframe
+df = pd.DataFrame({'Name': ['Alice', 'Bob', 'Charlie', 'Dave'],
+                   'Age': [25, 30, 35, 40]})
+
+# create a writer object and write the dataframe to an Excel file
+writer = pd.ExcelWriter('output.xlsx', engine='xlsxwriter')
+df.to_excel(writer, sheet_name='Sheet1', index=False)
+
+# get the worksheet object
+worksheet = writer.sheets['Sheet1']
+
+# add conditional formatting to highlight cells with age >= 35
+format1 = workbook.add_format({'bg_color': 'yellow'})
+worksheet.conditional_format('B2:B5', {'type': 'cell', 'criteria': '>=', 'value': 35, 'format': format1})
+
+# save the Excel file
+writer.save()
