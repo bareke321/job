@@ -1,0 +1,22 @@
+import xlsxwriter
+import pandas as pd
+
+workbook = xlsxwriter.Workbook('existing_file.xlsx')
+worksheet = workbook.get_worksheet_by_name('Sheet1')
+
+df = pd.DataFrame({'First Name': ['John', 'Jane', 'Bob'],
+                   'Last Name': ['Doe', 'Doe', 'Smith'],
+                   'Age': [25, 30, 35]})
+
+for row, row_data in enumerate(df.values):
+    for col, col_data in enumerate(row_data):
+        if isinstance(col_data, str):
+            worksheet.write_rich_string(row, col, worksheet.cell(row, col).get_rich_string(), col_data)
+        else:
+            worksheet.write(row, col, col_data)
+
+for i, col in enumerate(df.columns):
+    column_width = max(df[col].astype(str).map(len).max(), len(col))
+    worksheet.set_column(i, i, column_width)
+
+workbook.close()
