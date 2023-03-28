@@ -30,3 +30,12 @@ interface = gr.Interface(fn=predict, inputs=inputs, outputs=output)
 
 # Launch the interface
 interface.launch()
+
+
+inputs = [
+    gr.inputs.Radio(["File Upload", "Text Input"], label="Select Input Method"),
+    gr.inputs.Textbox(label="Enter Text", placeholder="Enter text here...", default="",
+                       conditions={"choices": ["Text Input"]}),
+    gr.inputs.File(label="Upload File", type=["csv", "xlsx"],
+                    conditions={"visible": False, "choices": ["File Upload"]})
+]
