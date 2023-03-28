@@ -1,0 +1,32 @@
+import gradio as gr
+import pandas as pd
+import my_model # import your machine learning model and prediction function
+
+# Define your input and output interfaces
+text_input = gr.inputs.Textbox(label="Enter Text", placeholder="Enter text here...", default="")
+file_upload = gr.inputs.File(label="Upload File", type=["csv", "xlsx"])
+input_method = gr.inputs.Radio(["Text Input Only", "Text Input and File Upload"], label="Select Input Method", default="Text Input Only")
+inputs = [input_method, text_input, file_upload]
+
+output = gr.outputs.Textbox(label="Prediction")
+
+# Define your prediction function
+def predict(input_method, text, file):
+    if input_method == "Text Input Only":
+        # Use the user-provided text as input
+        df = pd.DataFrame({"text": [text]})
+    else:
+        if file.name.endswith('.xlsx'):
+            # Load an Excel file into a Pandas DataFrame
+            df = pd.read_excel(file)
+        else:
+            # Load a CSV file into a Pandas DataFrame
+            df = pd.read_csv(file)
+    prediction = my_model.predict(df)
+    return prediction[0]
+
+# Create your Gradio interface
+interface = gr.Interface(fn=predict, inputs=inputs, outputs=output)
+
+# Launch the interface
+interface.launch()
